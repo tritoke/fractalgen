@@ -31,5 +31,3 @@ See ``cargo run -- --help`` for more information on what arguments are available
 
 ``cargo run --release -- --mapfile path/to/libcmap/colourmaps/Gallet06.cmap -s -f julia --julia_centre -0.835,-0.2321``
 ![Julia set - example render 4 in Gallet06 colourmap](https://github.com/tritoke/fractalgen/blob/main/examples/julia4-Gallet06.jpg)
-
-![blues julia set spin](https://imgur.com/a/VRTneUs)
