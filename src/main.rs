@@ -30,7 +30,9 @@ fn main() -> std::io::Result<()> {
             .unwrap();
     }
 
-    println!("{:#?}", opt);
+    if opt.verbose {
+        println!("{:#?}", opt);
+    }
 
     let cmap: ColourMap = read_cmap_file(&opt.mapfile)?;
 
@@ -50,7 +52,7 @@ fn main() -> std::io::Result<()> {
         bottom_left,
     };
 
-    let path = Path::new(r"render.png");
+    let path = Path::new(&opt.outfile);
     let file = File::create(path)?;
     let w = &mut BufWriter::new(file);
 
@@ -104,6 +106,10 @@ struct Opt {
     /// use an algorithm to smooth between colors and reduce banding
     #[structopt(short, long)]
     smooth: bool,
+
+    /// print out verbose debug info
+    #[structopt(short, long)]
+    verbose: bool,
 
     /// The type of fractal to render
     #[structopt(short, long, default_value = "mandelbrot")]
