@@ -17,7 +17,7 @@ use self::cmap::{read_cmap_file, ColourMap, Pixel};
 
 use rayon::prelude::*;
 
-type RenderFP = f32;
+type RenderFP = f64;
 
 fn main() -> std::io::Result<()> {
     let opt = Opt::from_args();
