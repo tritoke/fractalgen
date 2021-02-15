@@ -140,7 +140,8 @@ arg_enum! {
     #[derive(Debug)]
     enum FractalType {
         Mandelbrot,
-        Julia
+        Julia,
+        BurningShip
     }
 }
 
@@ -199,7 +200,7 @@ fn iter_row<'a>(render_info: &'a RenderInfo, row: u32) -> RowIter<'a> {
 
 struct RowIter<'a> {
     render_info: &'a RenderInfo<'a>,
-    y_val: RenderFP, // calculated from the row
+    y_val: RenderFP,
     col: u32,
 }
 
@@ -209,29 +210,36 @@ impl<'a> Iterator for RowIter<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         if self.col < self.render_info.width {
             let x = distribute(
-                self.render_info.width - self.col - 1,
+                self.col,
                 self.render_info.width,
-                self.render_info.top_right.x,
                 self.render_info.bottom_left.x,
+                self.render_info.top_right.x,
             );
-            let y = self.y_val;
-
-            let Point { x: c, y: d } = self.render_info.julia_centre;
 
             self.col += 1;
 
             Some(match self.render_info.fractal_type {
                 FractalType::Mandelbrot => mandelbrot(
-                    x,
-                    self.y_val,
+                    Point { x, y: self.y_val },
                     self.render_info.escape_limit,
                     &self.render_info.color_info,
                 ),
                 FractalType::Julia => julia(
-                    x,
-                    y,
-                    c,
-                    d,
+                    Point { x, y: self.y_val },
+                    &self.render_info.julia_centre,
+                    self.render_info.escape_limit,
+                    &self.render_info.color_info,
+                ),
+                FractalType::BurningShip => burning_ship(
+                    Point {
+                        x,
+                        // invert y value so fractal is upright
+                        y: reverse(
+                            self.y_val,
+                            self.render_info.top_right.y,
+                            self.render_info.bottom_left.y,
+                        ),
+                    },
                     self.render_info.escape_limit,
                     &self.render_info.color_info,
                 ),
@@ -247,13 +255,19 @@ fn distribute(i: u32, n: u32, a: RenderFP, b: RenderFP) -> RenderFP {
     a + (i as RenderFP / (n as RenderFP / (b - a)))
 }
 
-fn mandelbrot(c: RenderFP, d: RenderFP, escape_limit: usize, color_info: &ColorInfo) -> Pixel {
+/// takes a number in [a, b] and maps it onto the range [b, a]
+fn reverse(x: RenderFP, a: RenderFP, b: RenderFP) -> RenderFP {
+    b - (x - a)
+}
+
+fn mandelbrot(start: Point<RenderFP>, escape_limit: usize, color_info: &ColorInfo) -> Pixel {
     let black = Pixel {
         r: 0x00,
         g: 0x00,
         b: 0x00,
     };
 
+    let Point { x: c, y: d } = start;
     let mut x = c;
     let mut y = d;
     let mut x2 = c.powi(2);
@@ -297,10 +311,8 @@ fn mandelbrot(c: RenderFP, d: RenderFP, escape_limit: usize, color_info: &ColorI
 }
 
 fn julia(
-    x_orig: RenderFP,
-    y_orig: RenderFP,
-    c: RenderFP,
-    d: RenderFP,
+    start: Point<RenderFP>,
+    centre: &Point<RenderFP>,
     escape_limit: usize,
     color_info: &ColorInfo,
 ) -> Pixel {
@@ -310,10 +322,11 @@ fn julia(
         b: 0x00,
     };
 
-    let mut x = x_orig;
-    let mut y = y_orig;
-    let mut x2 = x_orig.powi(2);
-    let mut y2 = y_orig.powi(2);
+    let Point { mut x, mut y } = start;
+    let mut x2 = x.powi(2);
+    let mut y2 = y.powi(2);
+
+    let Point { x: c, y: d } = centre;
 
     let mut iterations = 0;
     while iterations < escape_limit && x2 + y2 < 4.0 {
@@ -331,6 +344,51 @@ fn julia(
         for _ in 0..3 {
             iterations += 1;
             y = 2.0 * x * y + d;
+            x = x2 - y2 + c;
+            x2 = x.powi(2);
+            y2 = y.powi(2);
+        }
+
+        let mu = RenderFP::max(
+            0.0,
+            iterations as RenderFP + 1.0 - (x2 + y2).sqrt().ln().ln() / RenderFP::ln(2.0),
+        );
+
+        smooth(mu, color_info)
+    } else {
+        *color_info.palette.iter().cycle().nth(iterations).unwrap()
+    }
+}
+
+fn burning_ship(start: Point<RenderFP>, escape_limit: usize, color_info: &ColorInfo) -> Pixel {
+    let black = Pixel {
+        r: 0x00,
+        g: 0x00,
+        b: 0x00,
+    };
+
+    let Point { x: c, y: d } = start;
+    let mut x = c;
+    let mut y = d;
+    let mut x2 = x.powi(2);
+    let mut y2 = y.powi(2);
+
+    let mut iterations = 0;
+    while iterations < escape_limit && x2 + y2 < 4.0 {
+        iterations += 1;
+        y = (2.0 * x * y).abs() + d;
+        x = x2 - y2 + c;
+        x2 = x.powi(2);
+        y2 = y.powi(2);
+    }
+
+    if iterations >= escape_limit - 1 {
+        black
+    } else if color_info.smooth {
+        // get an estimate for true iteration count
+        for _ in 0..3 {
+            iterations += 1;
+            y = (2.0 * x * y).abs() + d;
             x = x2 - y2 + c;
             x2 = x.powi(2);
             y2 = y.powi(2);
