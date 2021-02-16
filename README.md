@@ -38,7 +38,7 @@ See ``cargo run -- --help`` for more information on what arguments are available
 ### Burning ship renders
 
 ``cargo run --release -- --mapfile path/to/libcmap/colourmaps/drozdis1.cmap -s -f burningship --image_centre -1.75,-0.03 -x 0.1``
-![Julia set - example render 4 in Gallet06 colourmap](https://github.com/tritoke/fractalgen/blob/main/examples/burningship1-drozdis.jpg)
+![Burning ship fractal - example render 1 in drozdis1 colourmap](https://github.com/tritoke/fractalgen/blob/main/examples/burningship1-drozdis1.jpg)
 
 ``cargo run --release -- --mapfile path/to/libcmap/colourmaps/blues.cmap -s -f burningship --image_centre -1.67415,-0.002 -x 0.01``
-![Julia set - example render 4 in Gallet06 colourmap](https://github.com/tritoke/fractalgen/blob/main/examples/burningship2-blues.jpg)
+![Burning ship fractal - example render 2 in blues colourmap](https://github.com/tritoke/fractalgen/blob/main/examples/burningship2-blues.jpg)
