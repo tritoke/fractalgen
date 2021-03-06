@@ -306,7 +306,7 @@ fn mandelbrot(start: Point<RenderFP>, escape_limit: usize, color_info: &ColorInf
 
         smooth(mu, color_info)
     } else {
-        *color_info.palette.iter().cycle().nth(iterations).unwrap()
+        color_info.palette[iterations % color_info.palette.len()]
     }
 }
 
