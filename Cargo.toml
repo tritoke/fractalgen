@@ -7,7 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-structopt = "~0.3.21"
-png = "~0.16.8"
-rgb = "~0.8.25"
-rayon = "~1.5.0"
+png = "0.16"
+rgb = "0.8"
+rayon = "1.5"
+clap = { version = "3.2", features = ["derive"] }
+anyhow = "1.0.65"

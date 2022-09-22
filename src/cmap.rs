@@ -16,7 +16,7 @@ pub fn read_cmap_file(map_file: &Path) -> std::io::Result<ColourMap> {
         .filter(|line| line.starts_with('#'))
         .map(|line| {
             // anything after a space is a comment
-            let parse_to = line.find(' ').unwrap_or_else(|| line.len());
+            let parse_to = line.find(' ').unwrap_or(line.len());
             let hex_parsed = u32::from_str_radix(line.get(1..parse_to).unwrap(), 16).unwrap();
             match parse_to {
                 // short hexcode
@@ -43,7 +43,7 @@ pub fn read_cmap_file(map_file: &Path) -> std::io::Result<ColourMap> {
         })
         .collect();
 
-    if cmap.len() > 0 {
+    if !cmap.is_empty() {
         Ok(cmap)
     } else {
         panic!("Colourmap file must contain at least one colour.")
